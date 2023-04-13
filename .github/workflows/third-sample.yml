@@ -32,6 +32,7 @@ jobs:
       # Deploy Bicep file
     - name: Deploy Bicep
       uses: azure/arm-deploy@v1
+      id: deploy
       with:
         subscriptionId: ${{ env.SubscriptionId }}
         resourceGroupName: ${{ env.ResourceGroupName }}
@@ -45,6 +46,6 @@ jobs:
       with:
         inlineScript: |
           #!/bin/bash
-          sbNamespaceId = $(az servicebus namespace show --resource-group ${{ env.ResourceGroupName }} --name  ${{ steps.deploy_bicep.outputs.azureServiceBusNamespace }} --query id --output tsv)
-          miFunctionAppPrincipalId = $(az functionapp identity assign -g ${{ env.ResourceGroupName }} -n ${{ steps.deploy_bicep.outputs.functionAppName }} --query principalId --output tsv)
+          sbNamespaceId = $(az servicebus namespace show --resource-group ${{ env.ResourceGroupName }} --name  ${{ steps.deploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
+          miFunctionAppPrincipalId = $(az functionapp identity assign -g ${{ env.ResourceGroupName }} -n ${{ steps.deploy.outputs.functionAppName }} --query principalId --output tsv)
           az role assignment create --assignee $miFunctionAppPrincipalId --role "Azure Service Bus Data Sender" --scope $sbNamespaceId
