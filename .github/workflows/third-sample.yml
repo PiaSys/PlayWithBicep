@@ -9,14 +9,18 @@ jobs:
     steps:
 
       # Checkout code
-    - uses: actions/checkout@main
+    - name: Checkout
+      uses: actions/checkout@main
 
       # Log into Azure
-    - uses: azure/login@v1
+    - name: Azure Login
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - uses: Azure/CLI@v1
+      # Create the target Resource Group
+    - name: Create Resource Group
+      uses: Azure/CLI@v1
       with:
         inlineScript: |
           #!/bin/bash
@@ -24,7 +28,7 @@ jobs:
           echo "Azure resource group created"
 
       # Deploy Bicep file
-    - name: bicepDeploy
+    - name: Deploy
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
@@ -32,16 +36,18 @@ jobs:
         template: ./third-sample.bicep
         parameters: 'resourcesPrefix=${{ vars.RESOURCESPREFIX }}'
         failOnStdErr: false
-        
-    - run: echo ${{ steps.bicepDeploy.outputs.azureServiceBusNamespace }}
 
-    - run: echo ${{ steps.bicepDeploy.outputs.functionAppName }}
+      # Echo output variables, just for the sake of it        
+    - run: echo ${{ steps.Deploy.outputs.azureServiceBusNamespace }}
+
+    - run: echo ${{ steps.Deploy.outputs.functionAppName }}
     
-    - name: Azure CLI script
+      # Create the Managed Identity for the Function App
+    - name: Configure Managed Identity
       uses: azure/CLI@v1
       with:
         azcliversion: 2.47.0
         inlineScript: |
-          $sbNamespaceId = (az servicebus namespace show --resource-group ${{ secrets.AZURE_RG }} --name  ${{ steps.bicepDeploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
-          $miFunctionAppPrincipalId = (az functionapp identity assign -g ${{ secrets.AZURE_RG }} -n ${{ steps.bicepDeploy.outputs.functionAppName }} --query principalId --output tsv)
+          $sbNamespaceId = (az servicebus namespace show --resource-group ${{ secrets.AZURE_RG }} --name  ${{ steps.Deploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
+          $miFunctionAppPrincipalId = (az functionapp identity assign -g ${{ secrets.AZURE_RG }} -n ${{ steps.Deploy.outputs.functionAppName }} --query principalId --output tsv)
           az role assignment create --assignee $miFunctionAppPrincipalId --role "Azure Service Bus Data Sender" --scope $sbNamespaceId
