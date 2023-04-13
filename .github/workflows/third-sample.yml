@@ -1,3 +1,4 @@
+on: 
 name: Deploy Bicep
 jobs:
   build-and-deploy:
