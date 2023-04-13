@@ -40,9 +40,11 @@ jobs:
         failOnStdErr: false
 
       # Echo output variables, just for the sake of it        
-    - run: echo ${{ steps.Deploy.outputs.azureServiceBusNamespace }}
+    - name: Echo Service Bus Namespace
+      run: echo ${{ steps.Deploy.outputs.azureServiceBusNamespace }}
 
-    - run: echo ${{ steps.Deploy.outputs.functionAppName }}
+    - name: Echo Function App Name
+      run: echo ${{ steps.Deploy.outputs.functionAppName }}
     
       # Create the Managed Identity for the Function App
     - name: Configure Managed Identity
