@@ -30,7 +30,7 @@ jobs:
           echo "Azure resource group created"
 
       # Deploy Bicep file
-    - name: Deploy
+    - name: Deploy Bicep
       uses: azure/arm-deploy@v1
       with:
         subscriptionId: ${{ env.SubscriptionId }}
@@ -45,6 +45,6 @@ jobs:
       with:
         inlineScript: |
           #!/bin/bash
-          sbNamespaceId = $(az servicebus namespace show --resource-group ${{ secrets.AZURE_RG }} --name  ${{ steps.Deploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
-          miFunctionAppPrincipalId = $(az functionapp identity assign -g ${{ secrets.AZURE_RG }} -n ${{ steps.Deploy.outputs.functionAppName }} --query principalId --output tsv)
+          sbNamespaceId = $(az servicebus namespace show --resource-group ${{ env.ResourceGroupName }} --name  ${{ steps.deploy_bicep.outputs.azureServiceBusNamespace }} --query id --output tsv)
+          miFunctionAppPrincipalId = $(az functionapp identity assign -g ${{ env.ResourceGroupName }} -n ${{ steps.deploy_bicep.outputs.functionAppName }} --query principalId --output tsv)
           az role assignment create --assignee $miFunctionAppPrincipalId --role "Azure Service Bus Data Sender" --scope $sbNamespaceId
