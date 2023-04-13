@@ -38,19 +38,11 @@ jobs:
         template: ./third-sample.bicep
         parameters: 'resourcesPrefix=${{ vars.RESOURCESPREFIX }}'
         failOnStdErr: false
-
-      # Echo output variables, just for the sake of it        
-    - name: Echo Service Bus Namespace
-      run: echo ${{ steps.Deploy.outputs.azureServiceBusNamespace }}
-
-    - name: Echo Function App Name
-      run: echo ${{ steps.Deploy.outputs.functionAppName }}
     
       # Create the Managed Identity for the Function App
     - name: Configure Managed Identity
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.47.0
         inlineScript: |
           $sbNamespaceId = (az servicebus namespace show --resource-group ${{ secrets.AZURE_RG }} --name  ${{ steps.Deploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
           $miFunctionAppPrincipalId = (az functionapp identity assign -g ${{ secrets.AZURE_RG }} -n ${{ steps.Deploy.outputs.functionAppName }} --query principalId --output tsv)
