@@ -3,6 +3,9 @@ name: Deploy Bicep
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      ResourceGroupLocation: "northeurope"
+    
     steps:
 
       # Checkout code
@@ -12,6 +15,13 @@ jobs:
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - uses: Azure/CLI@v1
+      with:
+        inlineScript: |
+          #!/bin/bash
+          az group create --name ${{ secrets.AZURE_RG }} --location ${{ env.ResourceGroupLocation }}
+          echo "Azure resource group created"
 
       # Deploy Bicep file
     - name: bicepDeploy
@@ -30,7 +40,7 @@ jobs:
     - name: Azure CLI script
       uses: azure/CLI@v1
       with:
-        azcliversion: 2.30.0
+        azcliversion: 2.47.0
         inlineScript: |
           $sbNamespaceId = (az servicebus namespace show --resource-group ${{ secrets.AZURE_RG }} --name  ${{ steps.bicepDeploy.outputs.azureServiceBusNamespace }} --query id --output tsv)
           $miFunctionAppPrincipalId = (az functionapp identity assign -g ${{ secrets.AZURE_RG }} -n ${{ steps.bicepDeploy.outputs.functionAppName }} --query principalId --output tsv)
